@@ -1,4 +1,4 @@
-# This tool can give you many merits below
+# This tool can give you all merits below
 * You can check your code faster than manual check
   * No need to copy and paste test cases
   * No need to compare your output and the correct output
