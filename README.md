@@ -4,7 +4,7 @@
   * No need to compare your output and the correct output
   * PARALELLY check your code with each of the test cases
 * You will never submit your code by mistake
-* Only one command "act" is needed to submit your code! You are even free from specifying file name!
+* Only one command `act` is needed to submit your code! You are even free from specifying file name!
 
 # Functions
 * to fetch test cases
