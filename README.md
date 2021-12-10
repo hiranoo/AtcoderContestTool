@@ -33,7 +33,7 @@
     * display all outputs and error messages regardless of the result
     
 ## Submitting your code
-* C++, Java and Python are supported
+* `C++ and Python are supported`
 * as default:
   * your code would be submitted only when passed all test cases
   * your code would be lastly modified code regardless of language
