@@ -19,20 +19,20 @@ from utilities import PyColors
 
 class CodeManager(FileManager):
     def __init__(self):
-        self.conf = Singleton.get_instance().get_conf()
+        self.__conf = Singleton.get_instance().get_conf()
         try:
-            with open (self.conf['env']['contest_conf_path'], 'r') as f:
-                self.contest_conf = json.load(f)
+            with open (self.__conf['env']['contest_conf_path'], 'r') as f:
+                self.__contest_conf = json.load(f)
         except:
             print('No contest is registered yet. Please register it.')
             sys.exit(0)
-        self.contest_name = self.contest_conf['contest_name']
-        self.contest_page_url = '{}/contests/{}'.format(self.conf['atcoder']['atcoder_top_url'], self.contest_name)
-        self.contest_dir_path = '{}/{}'.format(self.conf['env']['basedir_path'], self.contest_name)
-        self.testcase_dir_name = self.conf['env']['testcase_dir_name']
-        self.check_result_path = self.conf['env']['check_result_path']
-        self.extention_language_dict = self.conf['code']['extention_language_dict']
-        self.timeout = self.conf['code']['timeout']
+        self.__contest_name = self.__contest_conf['contest_name']
+        self.__contest_page_url = '{}/contests/{}'.format(self.__conf['atcoder']['atcoder_top_url'], self.__contest_name)
+        self.__contest_dir_path = '{}/{}'.format(self.__conf['env']['basedir_path'], self.__contest_name)
+        self.__testcase_dir_path = '{}/{}'.format(self.__contest_dir_path, self.__conf['env']['testcase_dir_name'])
+        self.__check_result_path = self.__conf['env']['check_result_path']
+        self.__extention_language_dict = self.__conf['code']['extention_language_dict']
+        self.__timeout = self.__conf['code']['timeout']
         super().__init__()
 
     def search_code(self, filename):
@@ -47,7 +47,7 @@ class CodeManager(FileManager):
         return filename, preprocess_is_necessary
 
     def __get_lastly_modified_code(self):
-        target_path_list = glob.glob(f'{self.contest_dir_path}/**', recursive=True)
+        target_path_list = glob.glob(f'{self.__contest_dir_path}/**', recursive=True)
         latest_file_path = None
         latest_modified_time = 0
         for path in target_path_list:
@@ -77,20 +77,19 @@ class CodeManager(FileManager):
             print(proc.stderr.decode())
             return False
         preprocessed_filename = lang.get_preprocessed_filename(filename)
-        if os.getcwd() != self.contest_dir_path: shutil.move('{}/{}'.format(os.getcwd(), preprocessed_filename), f'{self.contest_dir_path}/{preprocessed_filename}')
+        if os.getcwd() != self.__contest_dir_path: shutil.move('{}/{}'.format(os.getcwd(), preprocessed_filename), f'{self.__contest_dir_path}/{preprocessed_filename}')
         return True
 
     def __get_preprocessed_filepath(self, filename):
         lang = self._get_language(filename)
-        return '{}/{}'.format(self.contest_dir_path, lang.get_preprocessed_filename(filename))
+        return '{}/{}'.format(self.__contest_dir_path, lang.get_preprocessed_filename(filename))
 
     def run_testcases(self, filename, testcase_number):
         preprocessed_filepath = self.__get_preprocessed_filepath(filename)
         taskname = self._get_taskname(filename)
         task_screen_name = self._get_task_screen_name(filename) 
-        testcase_dir_path = f'{self.contest_dir_path}/{self.testcase_dir_name}'
-        input_filepath_list = sorted(glob.glob(f'{testcase_dir_path}/{task_screen_name}_input*')) # att　に合わせてtask_screen_nameにしている。actではtasknameに移行予定
-        output_filepath_list = sorted(glob.glob(f'{testcase_dir_path}/{task_screen_name}_output*'))
+        input_filepath_list = sorted(glob.glob(f'{self.__testcase_dir_path}/{taskname}*in.txt'))
+        output_filepath_list = sorted(glob.glob(f'{self.__testcase_dir_path}/{taskname}*out.txt'))
         if len(input_filepath_list) != len(output_filepath_list):
             print('Invalid testcases error')
             sys.exit(0)
@@ -116,7 +115,7 @@ class CodeManager(FileManager):
             print('No testcases found error')
             return False
 
-        with open(self.check_result_path, 'w') as f: json.dump(run_result_dict, f)
+        with open(self.__check_result_path, 'w') as f: json.dump(run_result_dict, f)
         return self.__evaluate_code(run_result_dict, task_screen_name)
 
     def _run_a_testcase(self, inputs):
@@ -125,12 +124,12 @@ class CodeManager(FileManager):
         with open(input_filepath, 'r') as input_f:
             with open(result_filepath, 'w') as result_f:
                 try:
-                    proc = subprocess.run(target_filepath, stdin=input_f, stdout=result_f, stderr=subprocess.PIPE, check=True, timeout=self.timeout, shell=True)
+                    proc = subprocess.run(target_filepath, stdin=input_f, stdout=result_f, stderr=subprocess.PIPE, check=True, timeout=self.__timeout, shell=True)
                     proc.check_returncode
                 except subprocess.CalledProcessError as e:
                     return case_number, Judge.RE, e.stderr.decode()
                 except subprocess.TimeoutExpired:
-                    return case_number, Judge.TLE, self.timeout
+                    return case_number, Judge.TLE, self.__timeout
 
         with open(result_filepath, 'r') as f: my_answer = f.read()
         with open(output_filepath, 'r') as f: correct_answer = f.read()
@@ -146,7 +145,7 @@ class CodeManager(FileManager):
 
     def __load_result(self):
         try:
-            with open(self.check_result_path, 'r') as f: return json.load(f)
+            with open(self.__check_result_path, 'r') as f: return json.load(f)
         except:
             return {}
 
@@ -178,7 +177,7 @@ class CodeManager(FileManager):
             print('There\'s no code to submit')
             return False
         
-        submit_page_url = f'{self.contest_page_url}/submit'
+        submit_page_url = f'{self.__contest_page_url}/submit'
         source_code = None
         with open(filepath, 'r') as f:
             source_code = f.read()
@@ -204,7 +203,7 @@ class CodeManager(FileManager):
             self.__print_judge_result(sm, self._get_task_screen_name(filename))
 
     def __print_judge_result(self, session_manager_instance, task_screen_name):
-        submission_page_url = f'{self.contest_page_url}/submissions/me'
+        submission_page_url = f'{self.__contest_page_url}/submissions/me'
         status = self.__fetch_judge_status(session_manager_instance, submission_page_url, task_screen_name)
         print(status)
         if status != 'AC': print(submission_page_url)

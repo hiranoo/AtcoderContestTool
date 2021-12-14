@@ -15,6 +15,7 @@ class Execute(metaclass=ABCMeta):
         try:
             filename, preprocess_is_necessary = self.__search_code(filename)
             if not filename:
+                print('No file was found.')
                 return
             print('Searched code: ', filename, preprocess_is_necessary)
             if preprocess_is_necessary and self.__preprocess(filename):
@@ -37,12 +38,12 @@ class Execute(metaclass=ABCMeta):
         print('display check result')
         return self.impl.display_check_result(filename, testcase_number, show_detail)
 
-    def _submit_code(self, filename):
+    def _submit_code(self, filename, show_detail):
         print('submit code')
-        return self.impl.submit_code(filename)
+        return self.impl.submit_code(filename, show_detail)
 
     @abstractmethod
-    def mainprocess(self, filename, testcase_number):
+    def mainprocess(self, filename, testcase_number, show_detail):
         pass
 
     
