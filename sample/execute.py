@@ -17,10 +17,9 @@ class Execute(metaclass=ABCMeta):
             if not filename:
                 print('No file was found.')
                 return
-            print('Searched code: ', filename, preprocess_is_necessary)
-            if preprocess_is_necessary and self.__preprocess(filename):
-                print('Compile done')
-            self.mainprocess(filename, testcase_number, show_detail)
+            print('Searched code: ', filename)
+            if (not preprocess_is_necessary) or (preprocess_is_necessary and self.__preprocess(filename)):
+                self.mainprocess(filename, testcase_number, show_detail)
         except e:
             print(e)
 

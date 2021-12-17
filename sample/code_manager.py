@@ -101,7 +101,8 @@ class CodeManager(FileManager):
 
         run_arguments = []
         run_result_dict = self.__load_result()
-        if not task_screen_name in run_result_dict: run_result_dict[task_screen_name] = {}
+        # if not task_screen_name in run_result_dict: run_result_dict[task_screen_name] = {}
+        run_result_dict[task_screen_name] = {}
         for case_number in case_number_list:
             run_arguments.append([preprocessed_filepath, case_number, input_filepath_list[case_number-1], output_filepath_list[case_number-1]])             
         if len(case_number_list) > 1:
@@ -138,25 +139,25 @@ class CodeManager(FileManager):
             return case_number, Judge.WA, {'your_answer': my_answer, 'correct_answer': correct_answer}
         return case_number, Judge.AC, correct_answer
 
-    def __evaluate_code(self, result_dict, task_screen_name):
-        for case_number in result_dict[task_screen_name].keys():
-           if result_dict[task_screen_name][case_number]['judge'] != Judge.AC.value: return False
-        return True
-
     def __load_result(self):
         try:
             with open(self.__check_result_path, 'r') as f: return json.load(f)
         except:
             return {}
 
+    def __evaluate_code(self, result_dict, task_screen_name):
+        for case_number in result_dict[task_screen_name].keys():
+           if result_dict[task_screen_name][case_number]['judge'] != Judge.AC.value: return False
+        return True
+
     def display_check_result(self, filename, testcase_number, show_detail=True):
         result = self.__load_result()
         task_screen_name = self._get_task_screen_name(filename)
         if testcase_number is None:
             for case_number in sorted(result[task_screen_name].keys()):
-                self.__display_a_testcase_result(result[task_screen_name], case_number, show_detail)
+                self.__display_a_testcase_result(result[task_screen_name], str(case_number), show_detail)
         else:
-            self.__display_a_testcase_result(result[task_screen_name], testcase_number, show_detail)
+            self.__display_a_testcase_result(result[task_screen_name], str(testcase_number), show_detail)
 
     def __display_a_testcase_result(self, result, testcase_number, show_detail=True):
         judge = Judge[result[testcase_number]['judge']]

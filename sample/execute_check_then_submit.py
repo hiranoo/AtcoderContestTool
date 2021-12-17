@@ -10,5 +10,5 @@ class ExecuteCheckThenSubmit(Execute):
         perfect = self._run_testcases(filename, testcase_number)
         self._display_check_result(filename, testcase_number, show_detail)
         if perfect:
-            self._submit_code(filename)
+            self._submit_code(filename, show_detail)
     

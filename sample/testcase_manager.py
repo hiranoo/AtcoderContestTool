@@ -43,6 +43,8 @@ class TestCaseManager(FileManager):
                 with open(self._create_testcase_path(taskname, i+1, 'in'), 'w') as f: f.write(inputs[i])
                 with open(self._create_testcase_path(taskname, i+1, 'out'), 'w') as f: f.write(outputs[i])
 
+            self.__copy_template_code(taskname)
+
     def __scrape_task_url_list(self):
         page = self.__fetch_page_html(f'{self.__contest_page_url}/tasks')
         task_table = page.find('tbody').find_all('a')
@@ -68,3 +70,8 @@ class TestCaseManager(FileManager):
         page = BeautifulSoup(response.text, 'html.parser')
         time.sleep(1)
         return page
+
+    def __copy_template_code(self, taskname):
+        original_path = '{}/{}'.format(self.__conf['env']['app_path'], self.__conf['env']['template_filename'])
+        copy_path = '{}/{}.cpp'.format(self.__contest_dir_path, taskname)
+        shutil.copy(original_path, copy_path)
