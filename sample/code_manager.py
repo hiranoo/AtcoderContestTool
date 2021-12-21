@@ -217,7 +217,10 @@ class CodeManager(FileManager):
             page = BeautifulSoup(response.text, 'html.parser')
             submission = page.find('tbody').find('tr').find_all('td')
             fetched_status = submission[6].text
-            if fetched_status in ['AC', 'WA', 'RE', 'TLE', 'MLE', 'CE']: status = fetched_status
+            for judge in ['AC', 'WA', 'RE', 'TLE', 'MLE', 'CE']:
+                if judge in fetched_status:
+                    status = judge
+                    break
             time.sleep(1)
         return status
 
