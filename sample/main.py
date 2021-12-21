@@ -11,7 +11,7 @@ from singleton import Singleton
 from session_manager import SessionManager
 
 def main():
-    Singleton.get_instance().set_conf('/tmp/config.json')
+    Singleton.get_instance().set_conf('act_config.json')
     conf = Singleton.get_instance().get_conf()
 
     parser = argparse.ArgumentParser()

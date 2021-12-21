@@ -1,0 +1,31 @@
+{
+	"atcoder": {
+		"atcoder_top_url": "https://atcoder.jp",
+		"username": "kovin",
+		"password": "ainn2beF3del",
+		"language_code": {
+			"CPP": 4003,
+			"PYTHON": 4006,
+			"JAVA": 4005
+		}
+	},
+	"env": {
+		"basedir_path": "/home/seiji/workspace/atcoder/contests",
+		"app_path": "/home/seiji/workspace/AtcoderContestTool/sample",
+		"cookies_path": "/tmp/cookies.txt",
+		"contest_conf_path": "/tmp/contest_conf.json",
+		"check_result_path": "/tmp/check_result.json",
+		"testcase_dir_name": "sample_cases",
+		"template_filename": "template.cpp",
+		"testcase_input_format": "{}_{}_in.txt",
+		"testcase_output_format": "{}_{}_out.txt"
+	},
+	"code": {
+		"extention_language_dict": {
+			"py": "PYTHON",
+			"cpp": "CPP",
+			"java": "JAVA"
+		},
+		"timeout": 5
+	}
+}
