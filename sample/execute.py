@@ -13,12 +13,12 @@ class Execute(metaclass=ABCMeta):
 
     def execute(self, filename=None, testcase_number=None, show_detail=True):
         try:
-            filename, preprocess_is_necessary = self.__search_code(filename)
+            filename = self.__search_code(filename)
             if not filename:
                 print('No file was found.')
                 return
             print('Searched code: ', filename)
-            if (not preprocess_is_necessary) or (preprocess_is_necessary and self.__preprocess(filename)):
+            if self.__preprocess(filename):
                 self.mainprocess(filename, testcase_number, show_detail)
         except e:
             print(e)
@@ -30,11 +30,9 @@ class Execute(metaclass=ABCMeta):
         return self.impl.preprocess(filename)
 
     def _run_testcases(self, filename, testcase_number):
-        print('run testcases')
         return self.impl.run_testcases(filename, testcase_number)
 
     def _display_check_result(self, filename, testcase_number, show_detail):
-        print('display check result')
         return self.impl.display_check_result(filename, testcase_number, show_detail)
 
     def _submit_code(self, filename, show_detail):

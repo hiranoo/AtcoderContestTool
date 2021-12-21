@@ -19,7 +19,7 @@ class Language(str, Enum):
         if self == self.CPP: return 'a.out'
         return filename
 
-    def get_run_command(self, filepath, input_file):
-        if self == self.CPP: return [filepath]
-        if self == self.PYTHON: return ['python3', filepath]
-        if self == self.JAVA: return ['java', filepath]
+    def get_run_command(self, filepath):
+        if self == self.CPP: return filepath
+        if self == self.PYTHON: return f'python3 {filepath}'
+        if self == self.JAVA: return f'java {filepath}'

@@ -38,13 +38,10 @@ class CodeManager(FileManager):
     def search_code(self, filename):
         if filename:
             if os.path.exists(self._get_full_path(filename)):
-                return filename, True
+                return filename
             raise OSError('No such file found error')
         filename = self.__get_lastly_modified_code()
-        if filename is None:
-            return None, False
-        preprocess_is_necessary = self.__judge_already_preprocessed(filename)
-        return filename, preprocess_is_necessary
+        return filename
 
     def __get_lastly_modified_code(self):
         target_path_list = glob.glob(f'{self.__contest_dir_path}/**', recursive=True)
@@ -60,16 +57,15 @@ class CodeManager(FileManager):
             return self._get_relative_path(latest_file_path)
         return None
 
-    def __judge_already_preprocessed(self, filename):
-        preprocessed_filepath = self.__get_preprocessed_filepath(filename)
-        if os.path.exists(preprocessed_filepath) and os.path.getmtime(preprocessed_filepath) >= os.path.getmtime(self._get_full_path(filename)):
-            return False
-        return True
+
 
     def preprocess(self, filename):
+        # change permission
+        os.chmod(self._get_full_path(filename), 0o755)
         lang = self._get_language(filename)
         command = lang.get_preprocess_command(self._get_full_path(filename))
         if command is None: return True
+        if self.__judge_already_preprocessed(filename): return True
         try:
             proc = subprocess.run(command, stderr=subprocess.PIPE)
             proc.check_returncode()
@@ -79,15 +75,22 @@ class CodeManager(FileManager):
         preprocessed_filename = lang.get_preprocessed_filename(filename)
         if os.getcwd() != self.__contest_dir_path: shutil.move('{}/{}'.format(os.getcwd(), preprocessed_filename), f'{self.__contest_dir_path}/{preprocessed_filename}')
         return True
+    
+    def __judge_already_preprocessed(self, filename):
+        preprocessed_filepath = self.__get_preprocessed_filepath(filename)
+        if os.path.exists(preprocessed_filepath) and os.path.getmtime(preprocessed_filepath) >= os.path.getmtime(self._get_full_path(filename)):
+            return False
+        return True
 
     def __get_preprocessed_filepath(self, filename):
         lang = self._get_language(filename)
         return '{}/{}'.format(self.__contest_dir_path, lang.get_preprocessed_filename(filename))
 
+
     def run_testcases(self, filename, testcase_number):
-        preprocessed_filepath = self.__get_preprocessed_filepath(filename)
         taskname = self._get_taskname(filename)
-        task_screen_name = self._get_task_screen_name(filename) 
+        task_screen_name = self._get_task_screen_name(filename)
+        command = self._get_language(filename).get_run_command(self.__get_preprocessed_filepath(filename))
         input_filepath_list = sorted(glob.glob(f'{self.__testcase_dir_path}/{taskname}*in.txt'))
         output_filepath_list = sorted(glob.glob(f'{self.__testcase_dir_path}/{taskname}*out.txt'))
         if len(input_filepath_list) != len(output_filepath_list):
@@ -104,7 +107,7 @@ class CodeManager(FileManager):
         # if not task_screen_name in run_result_dict: run_result_dict[task_screen_name] = {}
         run_result_dict[task_screen_name] = {}
         for case_number in case_number_list:
-            run_arguments.append([preprocessed_filepath, case_number, input_filepath_list[case_number-1], output_filepath_list[case_number-1]])             
+            run_arguments.append([command, case_number, input_filepath_list[case_number-1], output_filepath_list[case_number-1]])             
         if len(case_number_list) > 1:
             p = mp.Pool(testcase_size)
             for case_number, judge, detail in p.map(self._run_a_testcase, run_arguments):
@@ -120,12 +123,12 @@ class CodeManager(FileManager):
         return self.__evaluate_code(run_result_dict, task_screen_name)
 
     def _run_a_testcase(self, inputs):
-        target_filepath, case_number, input_filepath, output_filepath = inputs
+        command, case_number, input_filepath, output_filepath = inputs
         result_filepath = f'/tmp/result_{case_number}'
         with open(input_filepath, 'r') as input_f:
             with open(result_filepath, 'w') as result_f:
                 try:
-                    proc = subprocess.run(target_filepath, stdin=input_f, stdout=result_f, stderr=subprocess.PIPE, check=True, timeout=self.__timeout, shell=True)
+                    proc = subprocess.run(command, stdin=input_f, stdout=result_f, stderr=subprocess.PIPE, check=True, timeout=self.__timeout, shell=True)
                     proc.check_returncode
                 except subprocess.CalledProcessError as e:
                     return case_number, Judge.RE, e.stderr.decode()
@@ -150,6 +153,7 @@ class CodeManager(FileManager):
            if result_dict[task_screen_name][case_number]['judge'] != Judge.AC.value: return False
         return True
 
+
     def display_check_result(self, filename, testcase_number, show_detail=True):
         result = self.__load_result()
         task_screen_name = self._get_task_screen_name(filename)
@@ -171,6 +175,7 @@ class CodeManager(FileManager):
                 print(detail['your_answer'])
                 print('Correct:')
                 print(detail['correct_answer'])
+
 
     def submit_code(self, filename, wait_judge=True):
         filepath = self._get_full_path(filename)

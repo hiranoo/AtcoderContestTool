@@ -11,7 +11,7 @@ from singleton import Singleton
 from session_manager import SessionManager
 
 def main():
-    Singleton.get_instance().set_conf('act_config.json')
+    Singleton.get_instance().set_conf('/home/seiji/workspace/AtcoderContestTool/sample/act_config.json')
     conf = Singleton.get_instance().get_conf()
 
     parser = argparse.ArgumentParser()
@@ -30,15 +30,15 @@ def main():
         if args.submit and args.check is not None:
             print('You cannot use \'submit\' and \'check\' options at the same time.')
         elif args.submit:
-            print('submit anyway')
+            print('ONLY SUBMIT MODE')
             ExecuteSubmit().execute(filename=args.filename, show_detail=(not args.minimum))
         elif args.check is not None:
-            print('only check')
+            print('ONLY CHECK MODE')
             number = None
             if args.check: number = args.check
             ExecuteCheck().execute(filename=args.filename, testcase_number=number, show_detail=(not args.minimum))
         else:
-            print('check then submit')
+            print('CHECK then SUBMIT MODE')
             ExecuteCheckThenSubmit().execute(filename=args.filename, show_detail=(not args.minimum))
 
 if __name__ == '__main__':
