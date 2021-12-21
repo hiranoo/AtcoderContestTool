@@ -62,6 +62,7 @@ class CodeManager(FileManager):
     def preprocess(self, filename):
         # change permission
         os.chmod(self._get_full_path(filename), 0o755)
+        # compilable lang?
         lang = self._get_language(filename)
         command = lang.get_preprocess_command(self._get_full_path(filename))
         if command is None: return True
@@ -69,8 +70,15 @@ class CodeManager(FileManager):
         try:
             proc = subprocess.run(command, stderr=subprocess.PIPE)
             proc.check_returncode()
+            if proc.stderr:
+                print(proc.stderr.decode('utf-8'))
+                print(PyColors.PURPLE + PyColors.ACCENT + 'COMPILE ERROR' + PyColors.END)
+                return False
+            else:
+                return True            
         except:
             print(proc.stderr.decode())
+            print(PyColors.PURPLE + PyColors.ACCENT + 'COMPILE ERROR' + PyColors.END)
             return False
         preprocessed_filename = lang.get_preprocessed_filename(filename)
         if os.getcwd() != self.__contest_dir_path: shutil.move('{}/{}'.format(os.getcwd(), preprocessed_filename), f'{self.__contest_dir_path}/{preprocessed_filename}')
@@ -79,8 +87,8 @@ class CodeManager(FileManager):
     def __judge_already_preprocessed(self, filename):
         preprocessed_filepath = self.__get_preprocessed_filepath(filename)
         if os.path.exists(preprocessed_filepath) and os.path.getmtime(preprocessed_filepath) >= os.path.getmtime(self._get_full_path(filename)):
-            return False
-        return True
+            return True
+        return False
 
     def __get_preprocessed_filepath(self, filename):
         lang = self._get_language(filename)
@@ -110,11 +118,11 @@ class CodeManager(FileManager):
             run_arguments.append([command, case_number, input_filepath_list[case_number-1], output_filepath_list[case_number-1]])             
         if len(case_number_list) > 1:
             p = mp.Pool(testcase_size)
-            for case_number, judge, detail in p.map(self._run_a_testcase, run_arguments):
-                run_result_dict[task_screen_name][case_number] = {'judge': judge, 'detail': detail}
+            for res in p.map(self._run_a_testcase, run_arguments):
+                run_result_dict[task_screen_name][res['case_number']] = res
         elif len(case_number_list) == 1:
-            case_number, judge, detail = self._run_a_testcase(run_arguments[0])
-            run_result_dict[task_screen_name][case_number] = {'judge': judge, 'detail': detail}
+            res = self._run_a_testcase(run_arguments[0])
+            run_result_dict[task_screen_name][res['case_number']] = res
         else:
             print('No testcases found error')
             return False
@@ -124,23 +132,27 @@ class CodeManager(FileManager):
 
     def _run_a_testcase(self, inputs):
         command, case_number, input_filepath, output_filepath = inputs
-        result_filepath = f'/tmp/result_{case_number}'
+        result = {'case_number': case_number}
         with open(input_filepath, 'r') as input_f:
-            with open(result_filepath, 'w') as result_f:
-                try:
-                    proc = subprocess.run(command, stdin=input_f, stdout=result_f, stderr=subprocess.PIPE, check=True, timeout=self.__timeout, shell=True)
-                    proc.check_returncode
-                except subprocess.CalledProcessError as e:
-                    return case_number, Judge.RE, e.stderr.decode()
-                except subprocess.TimeoutExpired:
-                    return case_number, Judge.TLE, self.__timeout
+            try:
+                proc = subprocess.run(command, stdin=input_f, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True, timeout=5, shell=True)
+                proc.check_returncode
+            except subprocess.CalledProcessError as e:
+                result['judge'] = Judge.RE
+                result['your_output'] = e.stdout.decode('utf-8')
+                result['error'] = e.stderr.decode('utf-8')
+                return result
+            except subprocess.TimeoutExpired:
+                result['judge'] = Judge.TLE
+                result['your_output'] = e.stdout.decode('utf-8')
+                result['error'] = e.stderr.decode('utf-8')
+                return result
 
-        with open(result_filepath, 'r') as f: my_answer = f.read()
-        with open(output_filepath, 'r') as f: correct_answer = f.read()
-        
-        if my_answer != correct_answer:
-            return case_number, Judge.WA, {'your_answer': my_answer, 'correct_answer': correct_answer}
-        return case_number, Judge.AC, correct_answer
+        result['your_output'] = proc.stdout.decode('utf-8')
+        with open(output_filepath, 'r') as f: result['correct_answer'] = f.read()
+        if result['your_output'] != result['correct_answer']: result['judge'] = 'WA'
+        else: result['judge'] = 'AC'
+        return result
 
     def __load_result(self):
         try:
@@ -165,16 +177,21 @@ class CodeManager(FileManager):
 
     def __display_a_testcase_result(self, result, testcase_number, show_detail=True):
         judge = Judge[result[testcase_number]['judge']]
-        detail = result[testcase_number]['detail']
+        if 'your_output' in result[testcase_number]: your_output = result[testcase_number]['your_output']
+        if 'correct_answer' in result[testcase_number]: correct_answer = result[testcase_number]['correct_answer']
+        if 'error' in result[testcase_number]: error = result[testcase_number]['error']
+
         print(judge.get_judge_message(int(testcase_number)))
         if show_detail:
-            if judge == Judge.RE: print(detail)
-            if judge == Judge.TLE: print(detail)
-            if judge == Judge.WA:
-                print('Your answer:')
-                print(detail['your_answer'])
-                print('Correct:')
-                print(detail['correct_answer'])
+            if judge != Judge.AC:
+                print('Your Output:')
+                print(your_output)
+            if judge == Judge.RE or judge == Judge.TLE:
+                print('Error Message:')
+                print(error)
+            if judge == Judge.WA: 
+                print('Correct Answer:')
+                print(correct_answer)
 
 
     def submit_code(self, filename, wait_judge=True):
