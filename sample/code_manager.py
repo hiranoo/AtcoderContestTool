@@ -82,6 +82,7 @@ class CodeManager(FileManager):
             return False
         preprocessed_filename = lang.get_preprocessed_filename(filename)
         if os.getcwd() != self.__contest_dir_path: shutil.move('{}/{}'.format(os.getcwd(), preprocessed_filename), f'{self.__contest_dir_path}/{preprocessed_filename}')
+		print('Compile done')
         return True
     
     def __judge_already_preprocessed(self, filename):
@@ -148,8 +149,9 @@ class CodeManager(FileManager):
                 result['error'] = e.stderr.decode('utf-8')
                 return result
 
-        result['your_output'] = proc.stdout.decode('utf-8')
+        result['your_output'] = proc.stdout.decode('utf-8').strip('\x00')
         with open(output_filepath, 'r') as f: result['correct_answer'] = f.read()
+        if result['correct_answer'] == '': result['correct_answer'] += '\n'
         if result['your_output'] != result['correct_answer']: result['judge'] = 'WA'
         else: result['judge'] = 'AC'
         return result
