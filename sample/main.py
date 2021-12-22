@@ -1,3 +1,4 @@
+import os
 import json
 import argparse
 
@@ -23,8 +24,12 @@ def main():
     args = parser.parse_args()
 
     if args.init:
+        # Remove a file created for the previous contest
+        if os.path.exists(conf['env']['check_result_path']): os.remove(conf['env']['check_result_path'])
+        # Register contest name
         contest_conf = {'contest_name': args.init}
         with open(conf['env']['contest_conf_path'], 'w') as f: json.dump(contest_conf, f)
+        # Fetch sample cases
         TestCaseManager().fetch_and_save_testcases()
     else:
         if args.submit and args.check is not None:
