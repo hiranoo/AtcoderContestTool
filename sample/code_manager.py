@@ -73,16 +73,15 @@ class CodeManager(FileManager):
             if proc.stderr:
                 print(proc.stderr.decode('utf-8'))
                 print(PyColors.PURPLE + PyColors.ACCENT + 'COMPILE ERROR' + PyColors.END)
-                return False
-            else:
-                return True            
+                return False     
         except:
             print(proc.stderr.decode())
             print(PyColors.PURPLE + PyColors.ACCENT + 'COMPILE ERROR' + PyColors.END)
             return False
         preprocessed_filename = lang.get_preprocessed_filename(filename)
-        if os.getcwd() != self.__contest_dir_path: shutil.move('{}/{}'.format(os.getcwd(), preprocessed_filename), f'{self.__contest_dir_path}/{preprocessed_filename}')
-		print('Compile done')
+        if os.getcwd() != self.__contest_dir_path:
+            shutil.move('{}/{}'.format(os.getcwd(), preprocessed_filename), f'{self.__contest_dir_path}/{preprocessed_filename}')
+        print('Compile done')
         return True
     
     def __judge_already_preprocessed(self, filename):
