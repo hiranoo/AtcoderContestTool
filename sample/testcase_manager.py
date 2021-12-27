@@ -57,10 +57,21 @@ class TestCaseManager(FileManager):
         inputs = []
         outputs = []
         for part in parts:
-            if '入力例' in part.find('h3').text:
+            if '入力例' in part.text:
+                if part.find('pre') is None:
+                    inputs = []
+                    outputs = []
+                    break
                 inputs.append((part.find('pre').text).lstrip('\r\n'))
-            if '出力例' in part.find('h3').text:
+            if '出力例' in part.text:
+                if part.find('pre') is None:
+                    inputs = []
+                    outputs = []
+                    break
                 outputs.append((part.find('pre')).text.lstrip('\r\n'))
+
+        if len(inputs) == 0:
+            print(f'Could not fetch sample data from {url}')
         return inputs, outputs
 
     def __fetch_page_html(self, url):
