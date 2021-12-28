@@ -85,4 +85,4 @@ class TestCaseManager(FileManager):
     def __copy_template_code(self, taskname):
         original_path = '{}/{}'.format(self.__conf['env']['app_path'], self.__conf['env']['template_filename'])
         copy_path = '{}/{}.cpp'.format(self.__contest_dir_path, taskname)
-        shutil.copy(original_path, copy_path)
+        if not os.path.exists(copy_path): shutil.copy(original_path, copy_path)
