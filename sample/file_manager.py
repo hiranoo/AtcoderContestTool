@@ -30,10 +30,10 @@ class FileManager:
         return None
 
     def _get_task_screen_name(self, relative_path):
-        return '{}_{}'.format(self.__contest_name, self._get_taskname(relative_path))
+        return '{}_{}'.format(self.__contest_name, self._get_taskname(relative_path)).replace('-', '_')
 
     def _get_taskname(self, relative_path):
-        return (((relative_path.split('/'))[0]).split('.'))[0]
+        return (((relative_path.split('/'))[0]).split('.'))[0].replace('-', '_')
 
     def _create_testcase_path(self, taskname, testcase_number, in_or_out):
         return '{}/{}_{}_{}.txt'.format(self.__testcase_dir_path, taskname, testcase_number, in_or_out)

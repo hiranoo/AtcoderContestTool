@@ -57,10 +57,21 @@ class TestCaseManager(FileManager):
         inputs = []
         outputs = []
         for part in parts:
-            if '入力例' in part.find('h3').text:
+            if '入力例' in part.text:
+                if part.find('pre') is None:
+                    inputs = []
+                    outputs = []
+                    break
                 inputs.append((part.find('pre').text).lstrip('\r\n'))
-            if '出力例' in part.find('h3').text:
+            if '出力例' in part.text:
+                if part.find('pre') is None:
+                    inputs = []
+                    outputs = []
+                    break
                 outputs.append((part.find('pre')).text.lstrip('\r\n'))
+
+        if len(inputs) == 0:
+            print(f'Could not fetch sample data from {url}')
         return inputs, outputs
 
     def __fetch_page_html(self, url):
@@ -74,4 +85,4 @@ class TestCaseManager(FileManager):
     def __copy_template_code(self, taskname):
         original_path = '{}/{}'.format(self.__conf['env']['app_path'], self.__conf['env']['template_filename'])
         copy_path = '{}/{}.cpp'.format(self.__contest_dir_path, taskname)
-        shutil.copy(original_path, copy_path)
+        if not os.path.exists(copy_path): shutil.copy(original_path, copy_path)
